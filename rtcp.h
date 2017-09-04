@@ -237,6 +237,16 @@ typedef struct rtcp_context
 	uint32_t expected;
 	uint32_t expected_prior;
 	uint32_t lost, lost_remote;
+
+	/* RR process */
+	uint32_t rr_last_ts;
+	uint32_t rr_last_ehsnr;
+	uint32_t rr_last_lost;
+	uint32_t sent_packets_since_last_rr;
+
+	/* Link quality estimations */
+	double in_link_quality;
+	double out_link_quality;
 } rtcp_context;
 /*! \brief Method to retrieve the LSR from an existing RTCP context
  * @param[in] ctx The RTCP context to query
@@ -252,7 +262,14 @@ uint32_t janus_rtcp_context_get_lost_all(rtcp_context *ctx, gboolean remote);
  * @param[in] remote Whether we're quering the remote (provided by peer) or local (computed by Janus) info
  * @returns The computed jitter */
 uint32_t janus_rtcp_context_get_jitter(rtcp_context *ctx, gboolean remote);
-
+/*! \brief Method to retrieve inbound link quality from an existing RTCP context
+ * @param[in] ctx The RTCP context to query
+ * @returns Inbound link quality estimation */
+uint32_t janus_rtcp_context_get_in_link_quality(rtcp_context *ctx);
+/*! \brief Method to retrieve outbound link quality from an existing RTCP context
+ * @param[in] ctx The RTCP context to query
+ * @returns Outbound link quality estimation */
+uint32_t janus_rtcp_context_get_out_link_quality(rtcp_context *ctx);
 
 /*! \brief Method to quickly retrieve the sender SSRC (needed for demuxing RTCP in BUNDLE)
  * @param[in] packet The message data
