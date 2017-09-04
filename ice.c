@@ -3923,6 +3923,9 @@ void *janus_ice_send_thread(void *data) {
 									stream->video_first_rtp_ts = timestamp;
 								}
 							}
+							// update sent packets counter
+							rtcp_context *rtcp_ctx = video ? stream->video_rtcp_ctx : stream->audio_rtcp_ctx;
+							g_atomic_int_inc(&rtcp_ctx->sent_packets_since_last_rr);
 						}
 						if(max_nack_queue > 0) {
 							/* Save the packet for retransmissions that may be needed later */
