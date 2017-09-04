@@ -242,7 +242,7 @@ typedef struct rtcp_context
 	uint32_t rr_last_ts;
 	uint32_t rr_last_ehsnr;
 	uint32_t rr_last_lost;
-	uint32_t sent_packets_since_last_rr;
+	gint sent_packets_since_last_rr;
 
 	/* Link quality estimations */
 	double in_link_quality;
