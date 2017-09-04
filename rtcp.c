@@ -157,7 +157,7 @@ static void janus_rtcp_rr_update_stats(rtcp_context *ctx, report_block rb) {
 		return;
 	}
 	ctx->rr_last_ts = ts;
-	uint32_t sent = ctx->sent_packets_since_last_rr;
+	uint32_t sent = g_atomic_int_get(&ctx->sent_packets_since_last_rr);
 	uint32_t total = ntohl(rb.flcnpl) & 0x00FFFFFF;
 	if (ctx->rr_last_ehsnr != 0) {
 		int32_t expected = ntohl(rb.ehsnr) - ctx->rr_last_ehsnr;
@@ -531,11 +531,11 @@ int janus_rtcp_process_incoming_rtp(rtcp_context *ctx, char *packet, int len) {
 }
 
 uint32_t janus_rtcp_context_get_in_link_quality(rtcp_context *ctx) {
-	return (uint32_t)(ctx->in_link_quality);
+	return ctx ? (uint32_t)(ctx->in_link_quality) : 0;
 }
 
 uint32_t janus_rtcp_context_get_out_link_quality(rtcp_context *ctx) {
-	return (uint32_t)(ctx->out_link_quality);
+	return ctx ? (uint32_t)(ctx->out_link_quality) : 0;
 }
 
 uint32_t janus_rtcp_context_get_lsr(rtcp_context *ctx) {
