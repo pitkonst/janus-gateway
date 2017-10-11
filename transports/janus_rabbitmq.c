@@ -387,7 +387,7 @@ int janus_rabbitmq_init(janus_transport_callbacks *callback, const char *config_
 		if(janus_exchange != NULL) {
 			JANUS_LOG(LOG_VERB, "Declaring exchange...\n");
 			rmq_client->janus_exchange = amqp_cstring_bytes(janus_exchange);
-			amqp_exchange_declare(rmq_client->rmq_conn, rmq_client->rmq_channel, rmq_client->janus_exchange, amqp_cstring_bytes(JANUS_RABBITMQ_EXCHANGE_TYPE), 0, 0, 0, 0, amqp_empty_table);;
+			amqp_exchange_declare(rmq_client->rmq_conn, rmq_client->rmq_channel, rmq_client->janus_exchange, amqp_cstring_bytes(JANUS_RABBITMQ_EXCHANGE_TYPE), 0, 0, 0, 0, amqp_empty_table);
 			result = amqp_get_rpc_reply(rmq_client->rmq_conn);
 			if(result.reply_type != AMQP_RESPONSE_NORMAL) {
 				JANUS_LOG(LOG_FATAL, "Can't connect to RabbitMQ server: error diclaring exchange... %s, %s\n", amqp_error_string2(result.library_error), amqp_method_name(result.reply.id));
