@@ -11,7 +11,6 @@
 #include "eventhandler.h"
 
 #include <math.h>
-#include <curl/curl.h>
 
 #include <amqp.h>
 #include <amqp_framing.h>
