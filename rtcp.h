@@ -8,11 +8,11 @@
  * fixed before they are sent to the peers (e.g., to fix SSRCs that may
  * have been changed by the gateway). Methods to generate FIR messages
  * and generate/cap REMB messages are provided as well.
- * 
+ *
  * \ingroup protocols
  * \ref protocols
  */
- 
+
 #ifndef _JANUS_RTCP_H
 #define _JANUS_RTCP_H
 
@@ -37,8 +37,8 @@ typedef enum {
     RTCP_PSFB = 206,
     RTCP_XR = 207,
 } rtcp_type;
- 
- 
+
+
 /*! \brief RTCP Header (http://tools.ietf.org/html/rfc3550#section-6.1) */
 typedef struct rtcp_header
 {
@@ -241,8 +241,9 @@ typedef struct rtcp_context
 	/* RR process */
 	uint32_t rr_last_ts;
 	uint32_t rr_last_ehsnr;
-	uint32_t rr_last_lost;
+	uint32_t rr_last_nack_count;
 	gint sent_packets_since_last_rr;
+	gint nack_count;
 
 	/* Link quality estimations */
 	double in_link_quality;

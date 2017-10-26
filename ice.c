@@ -2334,11 +2334,13 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						unsigned int seqnr = GPOINTER_TO_UINT(list->data);
 						JANUS_LOG(LOG_DBG, "[%"SCNu64"]   >> %u\n", handle->handle_id, seqnr);
 						GList *rp = component->retransmit_buffer;
+						int in_rb = 0;
 						while(rp) {
 							janus_rtp_packet *p = (janus_rtp_packet *)rp->data;
 							if(p) {
 								janus_rtp_header *rh = (janus_rtp_header *)p->data;
 								if(ntohs(rh->seq_number) == seqnr) {
+									in_rb = 1;
 									/* Should we retransmit this packet? */
 									if((p->last_retransmit > 0) && (now-p->last_retransmit < MAX_NACK_IGNORE)) {
 										JANUS_LOG(LOG_HUGE, "[%"SCNu64"]   >> >> Packet %u was retransmitted just %"SCNi64"ms ago, skipping\n", handle->handle_id, seqnr, now-p->last_retransmit);
@@ -2362,6 +2364,10 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							}
 							rp = rp->next;
 						}
+						if (rtcp_ctx != NULL && in_rb) {
+							g_atomic_int_inc(&rtcp_ctx->nack_count);
+						}
+
 						list = list->next;
 					}
 					component->retransmit_recent_cnt += retransmits_cnt;

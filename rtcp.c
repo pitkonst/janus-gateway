@@ -8,11 +8,11 @@
  * fixed before they are sent to the peers (e.g., to fix SSRCs that may
  * have been changed by the gateway). Methods to generate FIR messages
  * and generate/cap REMB messages are provided as well.
- * 
+ *
  * \ingroup protocols
  * \ref protocols
  */
- 
+
 #include <math.h>
 #include <stdlib.h>
 
@@ -146,7 +146,7 @@ static void janus_rtcp_estimate_out_link_quality(rtcp_context *ctx, int32_t sent
 		else {
 			ctx->out_link_quality = (1.0 - 1.0/LINK_QUALITY_FILTER_K) * ctx->out_link_quality + (1.0/LINK_QUALITY_FILTER_K) * link_q;
 		}
-		JANUS_LOG(LOG_DBG, "Out link quality=%"SCNu32"\n", (int)ctx->out_link_quality);
+		JANUS_LOG(LOG_WARN, "Out link quality=%"SCNu32"\n", janus_rtcp_context_get_out_link_quality(ctx));
 }
 
 /* Update link quality stats based on RR */
@@ -158,21 +158,12 @@ static void janus_rtcp_rr_update_stats(rtcp_context *ctx, report_block rb) {
 	}
 	ctx->rr_last_ts = ts;
 	uint32_t sent = g_atomic_int_get(&ctx->sent_packets_since_last_rr);
-	uint32_t total = ntohl(rb.flcnpl) & 0x00FFFFFF;
 	if (ctx->rr_last_ehsnr != 0) {
-		int32_t expected = ntohl(rb.ehsnr) - ctx->rr_last_ehsnr;
-		int32_t lost_total = total - ctx->rr_last_lost;
-		int32_t lost_upload = expected - sent;
-		lost_upload = MAX(lost_upload, 0);
-		lost_upload = MIN(lost_upload, lost_total);
-		int32_t lost_download = lost_total - lost_upload;
-		lost_download = MAX(lost_download, 0);
-		lost_download = MIN(lost_download, lost_total);
-		JANUS_LOG(LOG_DBG, "RR exp=%"SCNu32", u+d=%"SCNu32", u=%"SCNu32", d=%"SCNu32"\n", expected, lost_total, lost_upload, lost_download);
-		janus_rtcp_estimate_out_link_quality(ctx, sent, lost_download);
+		int32_t nacks = g_atomic_int_get(&ctx->nack_count) - ctx->rr_last_nack_count;
+		janus_rtcp_estimate_out_link_quality(ctx, sent, nacks);
 	}
 	ctx->rr_last_ehsnr = ntohl(rb.ehsnr);
-	ctx->rr_last_lost = total;
+	ctx->rr_last_nack_count = g_atomic_int_get(&ctx->nack_count);
 	g_atomic_int_set(&ctx->sent_packets_since_last_rr, 0);
 }
 
@@ -531,11 +522,11 @@ int janus_rtcp_process_incoming_rtp(rtcp_context *ctx, char *packet, int len) {
 }
 
 uint32_t janus_rtcp_context_get_in_link_quality(rtcp_context *ctx) {
-	return ctx ? (uint32_t)(ctx->in_link_quality) : 0;
+	return ctx ? (uint32_t)(ctx->in_link_quality + 0.5) : 0;
 }
 
 uint32_t janus_rtcp_context_get_out_link_quality(rtcp_context *ctx) {
-	return ctx ? (uint32_t)(ctx->out_link_quality) : 0;
+	return ctx ? (uint32_t)(ctx->out_link_quality + 0.5) : 0;
 }
 
 uint32_t janus_rtcp_context_get_lsr(rtcp_context *ctx) {
@@ -581,6 +572,11 @@ uint32_t janus_rtcp_context_get_jitter(rtcp_context *ctx, gboolean remote) {
 }
 
 static void janus_rtcp_estimate_in_link_quality(rtcp_context *ctx, uint32_t lost_fraction) {
+		uint32_t ts = janus_get_monotonic_time();
+		uint32_t delta_t = ts - ctx->last_sent;
+		if(delta_t < 2*G_USEC_PER_SEC) {
+			return;
+		}
 		double link_q = 100.0 - (100.0 * lost_fraction / 255.0);
 		// filter estimation
 		if (ctx->in_link_quality == 0) {
@@ -589,7 +585,7 @@ static void janus_rtcp_estimate_in_link_quality(rtcp_context *ctx, uint32_t lost
 		else {
 			ctx->in_link_quality = (1.0 - 1.0/LINK_QUALITY_FILTER_K) * ctx->in_link_quality + (1.0/LINK_QUALITY_FILTER_K) * link_q;
 		}
-		JANUS_LOG(LOG_DBG, "In link quality=%"SCNu32"\n", (int)ctx->in_link_quality);
+		JANUS_LOG(LOG_WARN, "In link quality=%"SCNu32"\n", janus_rtcp_context_get_in_link_quality(ctx));
 }
 
 int janus_rtcp_report_block(rtcp_context *ctx, report_block *rb) {
