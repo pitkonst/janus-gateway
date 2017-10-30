@@ -2340,12 +2340,12 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							if(p) {
 								janus_rtp_header *rh = (janus_rtp_header *)p->data;
 								if(ntohs(rh->seq_number) == seqnr) {
-									in_rb = 1;
 									/* Should we retransmit this packet? */
 									if((p->last_retransmit > 0) && (now-p->last_retransmit < MAX_NACK_IGNORE)) {
 										JANUS_LOG(LOG_HUGE, "[%"SCNu64"]   >> >> Packet %u was retransmitted just %"SCNi64"ms ago, skipping\n", handle->handle_id, seqnr, now-p->last_retransmit);
 										break;
 									}
+									in_rb = 1;
 									JANUS_LOG(LOG_HUGE, "[%"SCNu64"]   >> >> Scheduling %u for retransmission due to NACK\n", handle->handle_id, seqnr);
 									p->last_retransmit = now;
 									retransmits_cnt++;
@@ -2367,7 +2367,6 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						if (rtcp_ctx != NULL && in_rb) {
 							g_atomic_int_inc(&rtcp_ctx->nack_count);
 						}
-
 						list = list->next;
 					}
 					component->retransmit_recent_cnt += retransmits_cnt;
@@ -3616,7 +3615,9 @@ void *janus_ice_send_thread(void *data) {
 					json_object_set_new(info, "jitter-local", json_integer(janus_rtcp_context_get_jitter(stream->audio_rtcp_ctx, FALSE)));
 					json_object_set_new(info, "jitter-remote", json_integer(janus_rtcp_context_get_jitter(stream->audio_rtcp_ctx, TRUE)));
 					json_object_set_new(info, "in-link-quality", json_integer(janus_rtcp_context_get_in_link_quality(stream->audio_rtcp_ctx)));
+					json_object_set_new(info, "in-media-link-quality", json_integer(janus_rtcp_context_get_in_media_link_quality(stream->audio_rtcp_ctx)));
 					json_object_set_new(info, "out-link-quality", json_integer(janus_rtcp_context_get_out_link_quality(stream->audio_rtcp_ctx)));
+					json_object_set_new(info, "out-media-link-quality", json_integer(janus_rtcp_context_get_out_media_link_quality(stream->audio_rtcp_ctx)));
 					if(stream->rtp_component) {
 						json_object_set_new(info, "packets-received", json_integer(stream->rtp_component->in_stats.audio_packets));
 						json_object_set_new(info, "packets-sent", json_integer(stream->rtp_component->out_stats.audio_packets));
@@ -3643,7 +3644,9 @@ void *janus_ice_send_thread(void *data) {
 					json_object_set_new(info, "jitter-local", json_integer(janus_rtcp_context_get_jitter(stream->video_rtcp_ctx, FALSE)));
 					json_object_set_new(info, "jitter-remote", json_integer(janus_rtcp_context_get_jitter(stream->video_rtcp_ctx, TRUE)));
 					json_object_set_new(info, "in-link-quality", json_integer(janus_rtcp_context_get_in_link_quality(stream->video_rtcp_ctx)));
+					json_object_set_new(info, "in-media-link-quality", json_integer(janus_rtcp_context_get_in_media_link_quality(stream->video_rtcp_ctx)));
 					json_object_set_new(info, "out-link-quality", json_integer(janus_rtcp_context_get_out_link_quality(stream->video_rtcp_ctx)));
+					json_object_set_new(info, "out-media-link-quality", json_integer(janus_rtcp_context_get_out_media_link_quality(stream->video_rtcp_ctx)));
 					if(stream->rtp_component) {
 						json_object_set_new(info, "packets-received", json_integer(stream->rtp_component->in_stats.video_packets));
 						json_object_set_new(info, "packets-sent", json_integer(stream->rtp_component->out_stats.video_packets));
