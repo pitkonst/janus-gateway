@@ -225,6 +225,8 @@ typedef struct rtcp_context
 
 	/* Last SR received */
 	uint32_t lsr;
+	/* Last RR received */
+	uint32_t lrr;
 	/* Monotonic time of last SR received */
 	int64_t lsr_ts;
 
@@ -260,6 +262,7 @@ typedef struct rtcp_context
  * @param[in] ctx The RTCP context to query
  * @returns The last SR received */
 uint32_t janus_rtcp_context_get_lsr(rtcp_context *ctx);
+uint32_t janus_rtcp_context_get_lrr(rtcp_context *ctx);
 /*! \brief Method to retrieve the total number of lost packets from an existing RTCP context
  * @param[in] ctx The RTCP context to query
  * @param[in] remote Whether we're quering the remote (provided by peer) or local (computed by Janus) info
