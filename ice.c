@@ -3602,6 +3602,7 @@ static gboolean janus_ice_outgoing_stats_handle(gpointer user_data) {
 				json_object_set_new(info, "media", json_string("audio"));
 				json_object_set_new(info, "base", json_integer(stream->audio_rtcp_ctx->tb));
 				json_object_set_new(info, "rtt", json_integer(janus_rtcp_context_get_rtt(stream->audio_rtcp_ctx)));
+				json_object_set_new(info, "lrr", json_integer(janus_rtcp_context_get_lrr(stream->audio_rtcp_ctx)));
 				json_object_set_new(info, "lost", json_integer(janus_rtcp_context_get_lost_all(stream->audio_rtcp_ctx, FALSE)));
 				json_object_set_new(info, "lost-by-remote", json_integer(janus_rtcp_context_get_lost_all(stream->audio_rtcp_ctx, TRUE)));
 				json_object_set_new(info, "jitter-local", json_integer(janus_rtcp_context_get_jitter(stream->audio_rtcp_ctx, FALSE)));
@@ -3638,6 +3639,7 @@ static gboolean janus_ice_outgoing_stats_handle(gpointer user_data) {
 					json_object_set_new(info, "base", json_integer(stream->video_rtcp_ctx[vindex]->tb));
 					if(vindex == 0)
 						json_object_set_new(info, "rtt", json_integer(janus_rtcp_context_get_rtt(stream->video_rtcp_ctx[vindex])));
+					json_object_set_new(info, "lrr", json_integer(janus_rtcp_context_get_lrr(stream->video_rtcp_ctx[vindex])));
 					json_object_set_new(info, "lost", json_integer(janus_rtcp_context_get_lost_all(stream->video_rtcp_ctx[vindex], FALSE)));
 					json_object_set_new(info, "lost-by-remote", json_integer(janus_rtcp_context_get_lost_all(stream->video_rtcp_ctx[vindex], TRUE)));
 					json_object_set_new(info, "jitter-local", json_integer(janus_rtcp_context_get_jitter(stream->video_rtcp_ctx[vindex], FALSE)));

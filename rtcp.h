@@ -245,6 +245,9 @@ typedef struct rtcp_context
 	/* Monotonic time of last SR received */
 	int64_t lsr_ts;
 
+	/* Last RR received */
+	uint32_t lrr;
+
 	/* Last RR/SR we sent */
 	int64_t last_sent;
 
@@ -290,6 +293,10 @@ typedef struct rtcp_transport_wide_cc_stats
 } rtcp_transport_wide_cc_stats;
 typedef rtcp_transport_wide_cc_stats janus_rtcp_transport_wide_cc_stats;
 
+/*! \brief Method to retrieve the last RR time from an existing RTCP context
+ * @param[in] ctx The RTCP context to query
+ * @returns The last RR time */
+uint32_t janus_rtcp_context_get_lrr(rtcp_context *ctx);
 /*! \brief Method to retrieve the estimated round-trip time from an existing RTCP context
  * @param[in] ctx The RTCP context to query
  * @returns The estimated round-trip time */

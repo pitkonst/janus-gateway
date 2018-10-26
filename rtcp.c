@@ -177,6 +177,7 @@ static void janus_rtcp_rr_update_stats(rtcp_context *ctx, janus_report_block rb)
 static void janus_rtcp_incoming_rr(janus_rtcp_context *ctx, janus_rtcp_rr *rr) {
 	if(ctx == NULL)
 		return;
+	ctx->lrr = janus_get_monotonic_time();
 	/* FIXME Check the Record Blocks */
 	if(rr->header.rc > 0) {
 		double jitter = (double)ntohl(rr->rb[0].jitter);
@@ -547,6 +548,9 @@ int janus_rtcp_process_incoming_rtp(janus_rtcp_context *ctx, char *packet, int l
 	return 0;
 }
 
+uint32_t janus_rtcp_context_get_lrr(rtcp_context *ctx) {
+	return ctx ? ctx->lrr : 0;
+}
 
 uint32_t janus_rtcp_context_get_rtt(janus_rtcp_context *ctx) {
 	return ctx ? ctx->rtt : 0;
