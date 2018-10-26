@@ -724,31 +724,42 @@ void *janus_rmq_out_thread(void *data) {
 			janus_mutex_lock(&rmq_client->mutex);
 			/* Gotcha! Convert json_t to string */
 			char *payload_text = json_dumps(response->payload, json_format);
+			if (payload_text != NULL) {
+				JANUS_LOG(LOG_VERB, "Sending %s API message to RabbitMQ (%zu bytes)...\n", response->admin ? "Admin" : "Janus", strlen(payload_text));
+				JANUS_LOG(LOG_VERB, "%s\n", payload_text);
+				amqp_basic_properties_t props;
+				props._flags = 0;
+				props._flags |= AMQP_BASIC_REPLY_TO_FLAG;
+				props.reply_to = amqp_cstring_bytes("Janus");
+				if(response->correlation_id) {
+					props._flags |= AMQP_BASIC_CORRELATION_ID_FLAG;
+					props.correlation_id = amqp_cstring_bytes(response->correlation_id);
+				}
+				props._flags |= AMQP_BASIC_CONTENT_TYPE_FLAG;
+				props.content_type = amqp_cstring_bytes("application/json");
+				amqp_bytes_t message = amqp_cstring_bytes(payload_text);
+				int status = amqp_basic_publish(rmq_client->rmq_conn, rmq_client->rmq_channel, rmq_client->janus_exchange,
+					response->admin ? rmq_client->from_janus_admin_queue : rmq_client->from_janus_queue,
+					0, 0, &props, message);
+				if(status != AMQP_STATUS_OK) {
+					JANUS_LOG(LOG_ERR, "Error publishing... %d, %s\n", status, amqp_error_string2(status));
+				}
+				free(payload_text);
+				payload_text = NULL;
+			}
+			else {
+				if (response->payload == NULL) {
+					JANUS_LOG(LOG_ERR, "Error generating payload - payload is NULL\n");
+				}
+				else {
+					JANUS_LOG(LOG_ERR, "Error generating payload - payload is not NULL (t - %d, ref_count - %d)\n",
+						response->payload->type, response->payload->refcount);
+				}
+			}
 			json_decref(response->payload);
 			response->payload = NULL;
-			JANUS_LOG(LOG_VERB, "Sending %s API message to RabbitMQ (%zu bytes)...\n", response->admin ? "Admin" : "Janus", strlen(payload_text));
-			JANUS_LOG(LOG_VERB, "%s\n", payload_text);
-			amqp_basic_properties_t props;
-			props._flags = 0;
-			props._flags |= AMQP_BASIC_REPLY_TO_FLAG;
-			props.reply_to = amqp_cstring_bytes("Janus");
-			if(response->correlation_id) {
-				props._flags |= AMQP_BASIC_CORRELATION_ID_FLAG;
-				props.correlation_id = amqp_cstring_bytes(response->correlation_id);
-			}
-			props._flags |= AMQP_BASIC_CONTENT_TYPE_FLAG;
-			props.content_type = amqp_cstring_bytes("application/json");
-			amqp_bytes_t message = amqp_cstring_bytes(payload_text);
-			int status = amqp_basic_publish(rmq_client->rmq_conn, rmq_client->rmq_channel, rmq_client->janus_exchange,
-				response->admin ? rmq_client->from_janus_admin_queue : rmq_client->from_janus_queue,
-				0, 0, &props, message);
-			if(status != AMQP_STATUS_OK) {
-				JANUS_LOG(LOG_ERR, "Error publishing... %d, %s\n", status, amqp_error_string2(status));
-			}
 			g_free(response->correlation_id);
 			response->correlation_id = NULL;
-			free(payload_text);
-			payload_text = NULL;
 			g_free(response);
 			response = NULL;
 			janus_mutex_unlock(&rmq_client->mutex);
